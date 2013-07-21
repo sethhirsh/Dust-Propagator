@@ -108,7 +108,7 @@ int main( )
     const double simulationStartEpoch = 0.0;
 
     //Set simulation end epoch
-    const double simulationEndEpoch = tudat::physical_constants::JULIAN_YEAR*100.0;
+    const double simulationEndEpoch = tudat::physical_constants::JULIAN_YEAR*1.0;
 
     //Set numerical integration fixed step size
     const double fixedStepSize = tudat::physical_constants::JULIAN_DAY * 0.25 ;
