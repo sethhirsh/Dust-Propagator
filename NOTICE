@@ -1,4 +1,5 @@
-Template Application
+Dust Propagator
+Copyright 2010-2013 Delft S. Hirsh
 Copyright 2010-2013 Delft University of Technology
 
 This product includes software developed in the Astrodynamics and Space missions
@@ -13,4 +14,4 @@ documentation, howtos, and tutorials.
 This software makes use of the Eigen (http://eigen.tuxfamily.org/) and Boost C++ 
 libraries (http://www.boost.org/).
 
-For any enquires, please contact tudat-AE@tudelft.nl.
+For any enquires, please contact sethhirsh@berkeley.edu.
