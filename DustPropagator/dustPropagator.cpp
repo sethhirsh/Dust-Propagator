@@ -58,11 +58,10 @@
 #include <Tudat/InputOutput/basicInputOutput.h>
 #include <Tudat/Mathematics/BasicMathematics/linearAlgebraTypes.h>
 
-#include <Tudat/Astrodynamics/BasicAstrodynamics/keplerPropagator.h>
-
 #include "DustPropagator/body.h"
 
-//#include <Tudat/Mathematics/RootFinders/newtonRaphson.h>
+#include <Tudat/Astrodynamics/BasicAstrodynamics/keplerPropagator.h>
+
 
 int main( )
 {
@@ -100,7 +99,7 @@ int main( )
     using tudat::orbital_element_conversions::convertTrueAnomalyToEccentricAnomaly;
     using tudat::orbital_element_conversions::convertEccentricAnomalyToMeanAnomaly;
 
-    //using tudat::orbital_element_conversions::propagateKeplerOrbit;
+    using tudat::orbital_element_conversions::propagateKeplerOrbit;
 
 
 
@@ -112,44 +111,53 @@ int main( )
     // Values are obtained from http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
 
     //Set output directory
-    const string outputDirectory = "/Users/sethmichaelhirsh/Desktop/Tudat/RawData";
+    const string outputDirectory = "/Users/sethmichaelhirsh/Desktop/Tudat/RawData/Cases";
 
     //Set simulation start epoch
     const double simulationStartEpoch = 0.0;
 
     //Set simulation end epoch
-    const double simulationEndEpoch = tudat::physical_constants::JULIAN_YEAR*1.0;
+    const double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY*7.0;
 
-    //Set numerical integration fixed step size
-    const double fixedStepSize = tudat::physical_constants::JULIAN_DAY * 0.25 ;
+    //Set numerical integration fixed step size in seconds
+    const double fixedStepSize = 60.0 ;
    
     //Astronamical Unit in meters
-    const double AU = 1.4959787071e11;
+    //const double AU = 1.4959787071e11;
 
-    //Eccentricity of Earth's Orbit
-    //for earth eccentricity = 0.016710220
-    const double eccentricity  = 0.8;
+    //Eccentricity of Earth's Orbit around Sun = 0.016710220
+    const double eccentricity  = 0.1;
+
+    //Altitude of Perigee in meters
+    const double altitudeOfPerigee = 5500.0e3;
+
+    //Set Sun equatorial radius [in m] 6.95500e8
+   //for earth 6,378.137 km
+   const double solarEquatorialRadius = 6378.137e3;
+
+
+    const double semiMajorAxis = (solarEquatorialRadius + altitudeOfPerigee) / (1.0 - eccentricity);
 
 
 //Initial state of dust particle in Keplerian coordinates
     Vector6d dustInitialStateInKeplerianElements;
-   dustInitialStateInKeplerianElements( semiMajorAxisIndex ) = AU;
+   dustInitialStateInKeplerianElements( semiMajorAxisIndex ) = semiMajorAxis;
    dustInitialStateInKeplerianElements( eccentricityIndex) = eccentricity;
-   dustInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians(30.0);
-   dustInitialStateInKeplerianElements( argumentOfPeriapsisIndex ) = convertDegreesToRadians(10.0);
-   dustInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex ) = convertDegreesToRadians(20.0);
+   dustInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians(88.0);
+   dustInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex ) = convertDegreesToRadians(120.0);
+   dustInitialStateInKeplerianElements( argumentOfPeriapsisIndex ) = convertDegreesToRadians(30.0);
    dustInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians(0.0);
 
 //Set Sun gravitational parameter [in m^3/s^2]
-   const double sunGravitationalParameter = 1.32712440018e20;
+   //for Sun 1.32712440018e20
+   //for earth 3.986004418e14
+   const double sunGravitationalParameter = 3.986004418e14;
 
-//Set Sun equatorial radius [in m] 6.95500e8
-   const double solarEquatorialRadius = 6.95500e8;
 
 //Set J2 zonal coefficient of the Sun
    //Source http://iau-comm4.jpl.nasa.gov/EVP.pdf "J2 = (1.7 ±0.5)×10−7"
    //unnormalized version (c or s coefficients)
-   const double J2 = 1.9e-7;
+   const double J2 = 0.0;
 
 
 
@@ -198,39 +206,15 @@ RungeKutta4Integrator<double, Vector6d, Vector6d > rungeKutta4(
 //Set running time to initial Epoch
 double runningTime = simulationStartEpoch;
 
-DoubleKeyTypeVectorXdValueTypeMap dustPropagationHistory;
-DoubleKeyTypeVectorXdValueTypeMap dustPropagationHistoryInKeplerianCoordinates;
-DoubleKeyTypeVectorXdValueTypeMap dustPropagationHistoryCOE;
+DoubleKeyTypeVectorXdValueTypeMap dustPropagationHistoryCartCoord;
+DoubleKeyTypeVectorXdValueTypeMap dustPropagationHistoryKeplerCoord;
+DoubleKeyTypeVectorXdValueTypeMap dustPropagationHistoryCOEKeplerCoord;
 
 //Add initial state to propagation histories
-dustPropagationHistory[0.0] = dustInitialState;
-dustPropagationHistoryInKeplerianCoordinates[0.0] = convertCartesianToKeplerianElements(
-            dustInitialState,sunGravitationalParameter);
+dustPropagationHistoryCartCoord[0.0] = dustInitialState;
+//dustPropagationHistoryKeplerCoord[0.0] = dustInitialStateInKeplerianElements;
+dustPropagationHistoryCOEKeplerCoord[0.0] = dustInitialStateInKeplerianElements;
 
-//Convert inclinationIndex, argument of pariapsis index, longitude of ascending node dndex, and true anomaly Index to degrees
-    dustPropagationHistoryInKeplerianCoordinates[0.0](inclinationIndex) = convertRadiansToDegrees(
-                        dustPropagationHistoryInKeplerianCoordinates[runningTime](inclinationIndex));
-
-    dustPropagationHistoryInKeplerianCoordinates[0.0](argumentOfPeriapsisIndex) = convertRadiansToDegrees(
-                        dustPropagationHistoryInKeplerianCoordinates[runningTime](argumentOfPeriapsisIndex));
-
-    dustPropagationHistoryInKeplerianCoordinates[0.0](longitudeOfAscendingNodeIndex) = convertRadiansToDegrees(
-                        dustPropagationHistoryInKeplerianCoordinates[runningTime](longitudeOfAscendingNodeIndex));
-
-    dustPropagationHistoryInKeplerianCoordinates[0.0](trueAnomalyIndex) = convertRadiansToDegrees(
-                        dustPropagationHistoryInKeplerianCoordinates[runningTime](trueAnomalyIndex));
-
-    dustPropagationHistoryCOE[0.0](inclinationIndex) = convertRadiansToDegrees(
-                        dustPropagationHistoryInKeplerianCoordinates[runningTime](inclinationIndex));
-
-    dustPropagationHistoryCOE[0.0](argumentOfPeriapsisIndex) = convertRadiansToDegrees(
-                        dustPropagationHistoryInKeplerianCoordinates[runningTime](argumentOfPeriapsisIndex));
-
-    dustPropagationHistoryCOE[0.0](longitudeOfAscendingNodeIndex) = convertRadiansToDegrees(
-                        dustPropagationHistoryInKeplerianCoordinates[runningTime](longitudeOfAscendingNodeIndex));
-
-    dustPropagationHistoryCOE[0.0](trueAnomalyIndex) = convertRadiansToDegrees(
-                        dustPropagationHistoryInKeplerianCoordinates[runningTime](trueAnomalyIndex));
 
 
 
@@ -243,55 +227,114 @@ while (runningTime < simulationEndEpoch)
     runningTime = rungeKutta4.getCurrentIndependentVariable();
 
     //Add state to propagation history
-    dustPropagationHistory[ runningTime ] = integratedState;
+    dustPropagationHistoryCartCoord[ runningTime ] = integratedState;
 
 
     // Convert propagation history into Keplerian elements
-    dustPropagationHistoryInKeplerianCoordinates[runningTime] = convertCartesianToKeplerianElements(
-                    dustPropagationHistory[runningTime],sunGravitationalParameter);
-
-    //Convert inclinationIndex, argument of pariapsis index, longitude of ascending node dndex, and true anomaly Index to degrees
-    dustPropagationHistoryInKeplerianCoordinates[runningTime](inclinationIndex) = convertRadiansToDegrees(
-                        dustPropagationHistoryInKeplerianCoordinates[runningTime](inclinationIndex));
-
-    dustPropagationHistoryInKeplerianCoordinates[runningTime](argumentOfPeriapsisIndex) = convertRadiansToDegrees(
-                        dustPropagationHistoryInKeplerianCoordinates[runningTime](argumentOfPeriapsisIndex));
-
-    dustPropagationHistoryInKeplerianCoordinates[runningTime](longitudeOfAscendingNodeIndex) = convertRadiansToDegrees(
-                        dustPropagationHistoryInKeplerianCoordinates[runningTime](longitudeOfAscendingNodeIndex));
+    dustPropagationHistoryKeplerCoord[runningTime] = convertCartesianToKeplerianElements(
+                  integratedState,sunGravitationalParameter);
 
 
-    double eccentricAnomaly = convertTrueAnomalyToEccentricAnomaly(
-                            dustPropagationHistoryInKeplerianCoordinates[runningTime](trueAnomalyIndex),
-                            dustPropagationHistoryInKeplerianCoordinates[runningTime](eccentricityIndex)
-                            );
-
-    double meanAnomaly = convertEccentricAnomalyToMeanAnomaly(
-                        dustPropagationHistoryInKeplerianCoordinates[runningTime](eccentricAnomaly),
-                        dustPropagationHistoryInKeplerianCoordinates[runningTime](eccentricityIndex)
-                        );
-
-    dustPropagationHistoryInKeplerianCoordinates[runningTime](trueAnomalyIndex) = convertRadiansToDegrees(
-                        meanAnomaly);
-
-
-   /*dustPropagationHistoryCOE[runningTime] = propagateKeplerOrbit(
-                    dustPropagationHistoryCOE[runningTime-fixedStepSize],
+   dustPropagationHistoryCOEKeplerCoord[runningTime] = propagateKeplerOrbit(
+                    dustPropagationHistoryCOEKeplerCoord[runningTime - fixedStepSize],
                     fixedStepSize,
-                    sunGravitationalParameter, 
-                    NewtonRaphsonPointer);  */
-
+                    sunGravitationalParameter);
 }
 
 
 
 
 
+// Record mean anomaly in propagation history rather than true anomaly
+
+runningTime = simulationStartEpoch;
+double eccentricAnomaly;
+double meanAnomaly;
+
+double eccentricAnomalyCOE;
+double meanAnomalyCOE;
+
+while (runningTime < simulationEndEpoch)
+{
+
+    dustPropagationHistoryKeplerCoord[runningTime] = convertCartesianToKeplerianElements(
+                  dustPropagationHistoryCartCoord[runningTime]
+                  ,sunGravitationalParameter);
+   //Convert true anomaly to eccentric anomaly
+       eccentricAnomaly = convertTrueAnomalyToEccentricAnomaly(
+                            dustPropagationHistoryKeplerCoord[runningTime](trueAnomalyIndex),
+                            dustPropagationHistoryKeplerCoord[runningTime](eccentricityIndex)
+                            );
+
+    //Convert eccentric anomaly to mean anomaly
+    meanAnomaly = convertEccentricAnomalyToMeanAnomaly(
+                        eccentricAnomaly,
+                        dustPropagationHistoryKeplerCoord[runningTime](eccentricityIndex)
+                        );
+
+
+    //Record mean anomaly in history to replace to true anomaly
+    dustPropagationHistoryKeplerCoord[runningTime](trueAnomalyIndex) = meanAnomaly;
+
+    //Convert inclinationIndex, argument of pariapsis index, longitude of ascending node index, and true anomaly Index to degrees
+    dustPropagationHistoryKeplerCoord[runningTime](inclinationIndex) = convertRadiansToDegrees(
+                        dustPropagationHistoryKeplerCoord[runningTime](inclinationIndex));
+
+    dustPropagationHistoryKeplerCoord[runningTime](argumentOfPeriapsisIndex) = convertRadiansToDegrees(
+                        dustPropagationHistoryKeplerCoord[runningTime](argumentOfPeriapsisIndex));
+
+    dustPropagationHistoryKeplerCoord[runningTime](longitudeOfAscendingNodeIndex) = convertRadiansToDegrees(
+                        dustPropagationHistoryKeplerCoord[runningTime](longitudeOfAscendingNodeIndex));
+
+    dustPropagationHistoryKeplerCoord[runningTime](trueAnomalyIndex) = convertRadiansToDegrees(
+                        dustPropagationHistoryKeplerCoord[runningTime](trueAnomalyIndex));
+
+
+
+
+
+
+//For propagation of dust particle using COE
+
+    //Convert true anomaly to eccentric anomaly
+    eccentricAnomalyCOE = convertTrueAnomalyToEccentricAnomaly(
+                            dustPropagationHistoryCOEKeplerCoord[runningTime](trueAnomalyIndex),
+                            dustPropagationHistoryCOEKeplerCoord[runningTime](eccentricityIndex)
+                            );
+
+    //Convert eccentric anomaly to mean anomaly
+    meanAnomalyCOE = convertEccentricAnomalyToMeanAnomaly(
+                        eccentricAnomalyCOE,
+                        dustPropagationHistoryCOEKeplerCoord[runningTime](eccentricityIndex)
+                        );
+
+
+    //Record mean anomaly in history to replace to true anomaly
+    dustPropagationHistoryCOEKeplerCoord[runningTime](trueAnomalyIndex) = meanAnomalyCOE;
+
+    //Convert inclinationIndex, argument of pariapsis index, longitude of ascending node index, and true anomaly Index to degrees
+    dustPropagationHistoryCOEKeplerCoord[runningTime](inclinationIndex) = convertRadiansToDegrees(
+                        dustPropagationHistoryCOEKeplerCoord[runningTime](inclinationIndex));
+
+    dustPropagationHistoryCOEKeplerCoord[runningTime](argumentOfPeriapsisIndex) = convertRadiansToDegrees(
+                        dustPropagationHistoryCOEKeplerCoord[runningTime](argumentOfPeriapsisIndex));
+
+    dustPropagationHistoryCOEKeplerCoord[runningTime](longitudeOfAscendingNodeIndex) = convertRadiansToDegrees(
+                        dustPropagationHistoryCOEKeplerCoord[runningTime](longitudeOfAscendingNodeIndex));
+
+    dustPropagationHistoryCOEKeplerCoord[runningTime](trueAnomalyIndex) = convertRadiansToDegrees(
+                        dustPropagationHistoryCOEKeplerCoord[runningTime](trueAnomalyIndex)); 
+
+
+    runningTime = runningTime + fixedStepSize;
+}
+
+
 //////////////////////////////////////
 
 //Write DataMap to text file in Cartesian Elements
-writeDataMapToTextFile( dustPropagationHistory, 
-                        "DNICartCoordMAJ2_100Years.dat",
+writeDataMapToTextFile( dustPropagationHistoryCartCoord, 
+                        "dustPropagationHistoryDNICartCase4_60.dat",
                         outputDirectory,
                         "",
                         numeric_limits< double >::digits10,
@@ -299,8 +342,18 @@ writeDataMapToTextFile( dustPropagationHistory,
                         ",");
 
 //write DataMap to text file in Keplerian Elements
-writeDataMapToTextFile( dustPropagationHistoryInKeplerianCoordinates, 
-                        "DNIKeplerCoordMAJ2_100Years.dat",
+writeDataMapToTextFile( dustPropagationHistoryKeplerCoord, 
+                        "dustPropagationHistoryDNICase4_60s.dat",
+                        outputDirectory,
+                        "",
+                        numeric_limits< double >::digits10,
+                        numeric_limits< double >::digits10,
+                        ",");
+
+
+//write DataMap to text file in Keplerian Elements
+writeDataMapToTextFile( dustPropagationHistoryCOEKeplerCoord, 
+                        "dustPropagationHistoryCOECase4_60s.dat",
                         outputDirectory,
                         "",
                         numeric_limits< double >::digits10,
