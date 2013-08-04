@@ -62,7 +62,7 @@
 
 #include "DustPropagator/body.h"
 
-#include <Tudat/Mathematics/RootFinders/newtonRaphson.h>
+//#include <Tudat/Mathematics/RootFinders/newtonRaphson.h>
 
 int main( )
 {
@@ -100,9 +100,8 @@ int main( )
     using tudat::orbital_element_conversions::convertTrueAnomalyToEccentricAnomaly;
     using tudat::orbital_element_conversions::convertEccentricAnomalyToMeanAnomaly;
 
-    using tudat::orbital_element_conversions::propagateKeplerOrbit;
+    //using tudat::orbital_element_conversions::propagateKeplerOrbit;
 
-    //using tudat::Mathematics::RootFinders::NewtonRaphsonPointer;
 
 
     ///////////////////////////////////////////////////////////////////////
