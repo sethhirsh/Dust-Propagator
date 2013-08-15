@@ -1,36 +1,9 @@
-/*    Copyright (c) 2010-2013, Delft University of Technology
+/*    
+ *    Copyright (c) 2013, S. Hirsh
+ *    Copyright (c) 2013, K. Kumar
+ *    Copyright (c) 2010-2013, Delft University of Technology
  *    All rights reserved.
- *
- *    Redistribution and use in source and binary forms, with or without modification, are
- *    permitted provided that the following conditions are met:
- *      - Redistributions of source code must retain the above copyright notice, this list of
- *        conditions and the following disclaimer.
- *      - Redistributions in binary form must reproduce the above copyright notice, this list of
- *        conditions and the following disclaimer in the documentation and/or other materials
- *        provided with the distribution.
- *      - Neither the name of the Delft University of Technology nor the names of its contributors
- *        may be used to endorse or promote products derived from this software without specific
- *        prior written permission.
- *
- *    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
- *    OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- *    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- *    COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- *    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- *    GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- *    AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- *    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- *    OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- *    Changelog
- *      YYMMDD    Author            Comment
- * 
- *
- *    References
- *      
- *
- *    Notes
- *
+ *    See COPYING or http://bit.ly/1cFRf75 for license details.
  */
 
 #include <fstream>
@@ -63,11 +36,20 @@
 
 #include <Tudat/Astrodynamics/BasicAstrodynamics/keplerPropagator.h>
 
+// Declare Kepler elements enum with mean anomaly instead of true anomaly.
+enum keplerianElementsWithMeanAnomaly
+{
+    semiMajorAxisIndex,
+    eccentricityIndex,
+    inclinationIndex,
+    longitudeOfAscendingNodeIndex,
+    argumentOfPeriapsisIndex,
+    meanAnomalyIndex
+};
+
 int main( )
 {
     using namespace std;
-    using namespace dust_propagator;
-
 
     using tudat::basic_astrodynamics::AccelerationModel3dPointer;
     using tudat::basic_astrodynamics::semiMajorAxisIndex;
@@ -102,333 +84,338 @@ int main( )
 
     using tudat::orbital_element_conversions::propagateKeplerOrbit;
 
-
+    using namespace dust_propagator;
 
     ///////////////////////////////////////////////////////////////////////
 
-// 6 x 5 array containing all of the test data. Each row is a different element of the initial conditions.
-//Each column is a different case. 
+    // KK: Don't forget to comment code blocks.
+    // KK: Ensure that you declare as much as possible outside the for-loops.
+    // KK: Be explicit with variable-naming so the code reads easily.
 
-const int numCases = 5;
+    // Set up input deck.
 
-const double cases[6][numCases] = {
-                {360.0e3,  550.0e3, 1350.0e3, 5500.0e3, 360.0e3}, //Altitude of Perigee (m)
-                {0.0005,   0.005,   0.05,     0.1,      0.005}, //Eccentricity 
-                {10.0,     97.5,    101.0,    88.0,     10.0},  //Inclination (deg)
-                {30.0,     50.0,    80.0,     120.0,    30.0},  //Longitude of Ascending Node (deg)
-                {30.0,     30.0,    30.0,     30.0,     30.0},  //Argument of Periapsis (deg)
-                {0.0,      0.0,     0.0,      0.0,      0.0}};  //True Anomaly (deg)
+    // Set output directory.
+    const string outputDirectory = "";
 
-const int numStepSizes = 2;
-const double stepSizes[numStepSizes] = {10.0, 60.0};
-
-
-//caseNumber should span 1 to numCases
-for (int  caseNumber= 1; caseNumber <= numCases; caseNumber++) //i is the case number
-{
-    for (int stepSizeNumber = 0; stepSizeNumber < numStepSizes; stepSizeNumber++ )
-    {
-
-    // Input deck
-
-    // Values are obtained from http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
-
-    //Set output directory
-    const string outputDirectory = "/Users/sethmichaelhirsh/Desktop/Tudat/RawData/Cases";
-
-    //Set simulation start epoch
+    // Set simulation start epoch.
     const double simulationStartEpoch = 0.0;
 
-    //Set simulation end epoch
-    const double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY*7.0;
+    // Set simulation end epoch.
+    const double simulationEndEpoch = tudat::physical_constants::JULIAN_DAY * 7.0;
+
+    // Set system parameters.
+    // Values are obtained from http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
+
+    // Set central body's equatorial radius (m).
+    const double centralBodyEquatorialRadius = 6378.137e3;
+
+    // Set central body's gravitational parameter (m^3/s^2).
+    // mu_Sun = 1.32712440018e20
+    // mu_Earth = 3.986004418e14
+    const double centralBodyGravitationalParameter = 3.986004418e14;
+
+
+    // Set J2 zonal coefficient for central body.
+    // Source http://iau-comm4.jpl.nasa.gov/EVP.pdf "J2 = (1.7 ±0.5)×10−7"
+    // unnormalized version (c or s coefficients)
+    const double J2 = 0.0;
+
+    // 6 x 5 array containing all of the test data. Each row is a different element of the initial 
+    // conditions.
+    // Each column is a different case. 
+    const int numberOfCases = 5;
+
+    // KK: Most likely safer to use STL containers for this (e.g., vector of vectors).
+    const double cases[ 6 ][ numberOfCases ] = 
+    {
+        { 360.0e3,  550.0e3, 1350.0e3, 5500.0e3, 360.0e3 }, // Altitude of Perigee (m)
+        { 0.0005,   0.005,   0.05,     0.1,      0.005 },   // Eccentricity 
+        { 10.0,     97.5,    101.0,    88.0,     10.0 },    // Inclination (deg)
+        { 30.0,     50.0,    80.0,     120.0,    30.0 },    // Longitude of Ascending Node (deg)
+        { 30.0,     30.0,    30.0,     30.0,     30.0 },    // Argument of Periapsis (deg)
+        { 0.0,      0.0,     0.0,      0.0,      0.0 }      // True anomaly (deg)
+    };
+
+    // Set integrator step sizes (s).
+    const int numberOfStepSizes = 2;
+    const double stepSizes[ numberOfStepSizes ] = { 10.0, 60.0 };
+
+    ///////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////
+
+    // Execute simulations.
+
+    // Loop over cases.
+    // KK: Be very careful with array indices: in C++ array indices start at 0! Convention is to 
+    // start for-loop counters at 0 and use the '<' comparison to check of the end condition.
+    for ( int caseNumber = 0; caseNumber < numberOfCases; caseNumber++ )
+    { 
+        // Loop over numerical integrator step sizes.
+        for (int stepSizeNumber = 0; stepSizeNumber < numberOfStepSizes; stepSizeNumber++ )
+        {
+            ///////////////////////////////////////////////////////////////////////
+
+            // Set up initial conditions.
+
+            // Set numerical integration fixed step size (s).
+            const double fixedStepSize = stepSizes[ stepSizeNumber ];
+            
+            // Altitude of perigee (m).
+            const double altitudeOfPerigee = cases[ 0 ][ caseNumber ];   
+            
+            // Eccentricity of Earth's Orbit around Sun = 0.016710220.
+            const double eccentricity = cases[ 1 ][ caseNumber ];
+            
+            // Compute semi-major axis (m).
+            const double semiMajorAxis = ( centralBodyEquatorialRadius + altitudeOfPerigee ) 
+                                         / ( 1.0 - eccentricity );
+
+            // Initial state of dust particle in Keplerian coordinates
+            Vector6d dustInitialStateInKeplerianElements;
+            dustInitialStateInKeplerianElements( semiMajorAxisIndex ) = semiMajorAxis;
+            dustInitialStateInKeplerianElements( eccentricityIndex) = eccentricity;
+            dustInitialStateInKeplerianElements( inclinationIndex ) 
+                = convertDegreesToRadians( cases[ 2 ][ caseNumber ] );
+            dustInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex ) 
+                = convertDegreesToRadians( cases[ 3 ][ caseNumber ] );
+            dustInitialStateInKeplerianElements( argumentOfPeriapsisIndex ) 
+                = convertDegreesToRadians( cases[ 4 ][ caseNumber ] );
+            dustInitialStateInKeplerianElements( trueAnomalyIndex ) 
+                = convertDegreesToRadians( cases[ 5 ][ caseNumber ] );
+
+            // Convert dust initial state from Keplerian elements to Cartesian elements
+            const Vector6d dustInitialState = convertKeplerianToCartesianElements(
+                dustInitialStateInKeplerianElements, centralBodyGravitationalParameter );
+
+            ///////////////////////////////////////////////////////////////////////
+
+            ///////////////////////////////////////////////////////////////////////    
+
+            // Create acceleration model(s) and state derivative model for dust particle.
+
+            // Create body object containing dust initial state and epoch.
+            const BodyPointer dust = boost::make_shared< Body >( dustInitialState );
+
+            // Calculate gravitation acceleration model for dust particle.
+            // Note: the central body radius, in addition to J2, J3, and J4 are currently set to 0.
+            const CentralJ2J3J4GravitationalAccelerationModelPointer dustGravityModel
+                    = boost::make_shared< CentralJ2J3J4GravitationalAccelerationModel >(
+                        boost::bind( &Body::getCurrentPosition, dust ),
+                        centralBodyGravitationalParameter, centralBodyEquatorialRadius, 
+                        J2, 0.0, 0.0 );
+
+            // Create list of acceleration models.
+            const CartesianStateDerivativeModel6d::AccelerationModelPointerVector 
+                dustListOfAccelerations = boost::assign::list_of( dustGravityModel );
+
+            // Create state derivative model.
+            const CartesianStateDerivativeModel6dPointer dustStateDerivativeModel
+                   = boost::make_shared< CartesianStateDerivativeModel6d >(
+                        dustListOfAccelerations,boost::bind( 
+                            &Body::setCurrentTimeAndState, dust, _1, _2 ) );                
+
+            ///////////////////////////////////////////////////////////////////////    
+
+            ///////////////////////////////////////////////////////////////////////
+
+            // Create Runge Kutta 4 integrator and set initial conditions.
+            RungeKutta4Integrator< double, Vector6d, Vector6d > rungeKutta4(
+                    boost::bind( &CartesianStateDerivativeModel6d::computeStateDerivative,
+                                 dustStateDerivativeModel, _1, _2 ),
+                    simulationStartEpoch, 
+                    ( Eigen::VectorXd( 6 ) << dustInitialState ).finished( ) );
+
+            /////////////////////////////////////////////////////////////////////// 
 
-    //Set numerical integration fixed step size in seconds
-    const double fixedStepSize = stepSizes[stepSizeNumber];
-   
-    //Astronamical Unit in meters
-    //const double AU = 1.4959787071e11;
+            ///////////////////////////////////////////////////////////////////////
 
-    //Eccentricity of Earth's Orbit around Sun = 0.016710220
-    const double eccentricity  = cases[1][caseNumber-1];
+            // Execute numerical integration.
 
-    //Altitude of Perigee in meters
-    const double altitudeOfPerigee = cases[0][caseNumber-1];
+            // Set running time to initial epoch.
+            double runningTime = simulationStartEpoch;
 
-    //Set Sun equatorial radius [in m] 6.95500e8
-   //for earth 6,378.137 km
-   const double solarEquatorialRadius = 6378.137e3;
+            // Declare state history containers.
+            DoubleKeyTypeVectorXdValueTypeMap dustStateHistory;
+            DoubleKeyTypeVectorXdValueTypeMap dustStateHistoryKeplerElements;
+            DoubleKeyTypeVectorXdValueTypeMap dustStateHistoryKeplerElementsBenchmark;
 
+            // Add initial state to state histories.
+            dustStateHistory[ runningTime ] = dustInitialState;
+            dustStateHistoryKeplerElements[ runningTime ] 
+                = dustInitialStateInKeplerianElements;
+            // dustStateHistoryCOEKeplerCoord[ runningTime ] 
+            //     = dustInitialStateInKeplerianElements;
 
-    const double semiMajorAxis = (solarEquatorialRadius + altitudeOfPerigee) / (1.0 - eccentricity);
+            // Integrate until the simulation end epoch.
+            while (runningTime < simulationEndEpoch)
+            {
+                // Perform integration step calling compute state derivative.
+                Vector6d integratedState = rungeKutta4.performIntegrationStep( fixedStepSize );
 
+                // Get the current time.
+                runningTime = rungeKutta4.getCurrentIndependentVariable( );
 
-//Initial state of dust particle in Keplerian coordinates
-    Vector6d dustInitialStateInKeplerianElements;
-   dustInitialStateInKeplerianElements( semiMajorAxisIndex ) = semiMajorAxis;
-   dustInitialStateInKeplerianElements( eccentricityIndex) = eccentricity;
-   dustInitialStateInKeplerianElements( inclinationIndex ) = convertDegreesToRadians(cases[2][caseNumber-1]);
-   dustInitialStateInKeplerianElements( longitudeOfAscendingNodeIndex ) = convertDegreesToRadians(cases[3][caseNumber-1]);
-   dustInitialStateInKeplerianElements( argumentOfPeriapsisIndex ) = convertDegreesToRadians(cases[4][caseNumber-1]);
-   dustInitialStateInKeplerianElements( trueAnomalyIndex ) = convertDegreesToRadians(cases[5][caseNumber-1]);
+                // Add state to state history.
+                dustStateHistory[ runningTime ] = integratedState;
 
-//Set Sun gravitational parameter [in m^3/s^2]
-   //for Sun 1.32712440018e20
-   //for earth 3.986004418e14
-   const double sunGravitationalParameter = 3.986004418e14;
+                // Convert state history into Keplerian elements.
+                dustStateHistoryKeplerElements[ runningTime ] 
+                    = convertCartesianToKeplerianElements( 
+                        integratedState, centralBodyGravitationalParameter );
 
+               //  //
+               // dustStateHistoryCOEKeplerCoord[runningTime] = propagateKeplerOrbit(
+               //                  dustStateHistoryCOEKeplerCoord[runningTime - fixedStepSize],
+               //                  fixedStepSize,
+               //                  centralBodyGravitationalParameter);
+            }
 
-//Set J2 zonal coefficient of the Sun
-   //Source http://iau-comm4.jpl.nasa.gov/EVP.pdf "J2 = (1.7 ±0.5)×10−7"
-   //unnormalized version (c or s coefficients)
-   const double J2 = 0.0;
+            ///////////////////////////////////////////////////////////////////////  
 
+            ///////////////////////////////////////////////////////////////////////
 
+            // Write state histories to files.
 
-////////////////////////////////////////////
+            // Convert case number and stepsize values as strings.
+            std::ostringstream fileNameBase;
+            fileNameBase << "_case" << caseNumber + 1 << "_" << fixedStepSize << "s.dat";
 
+            // Write dust state history in Cartesian elements to file.
+            writeDataMapToTextFile( dustStateHistory, 
+                                    "dustStateHistory" + fileNameBase.str( ),
+                                    outputDirectory,
+                                    "",
+                                    numeric_limits< double >::digits10,
+                                    numeric_limits< double >::digits10,
+                                    "," );
 
-//Convert dust initial state from Keplerian elements to Cartesian elements
-const Vector6d dustInitialState = convertKeplerianToCartesianElements(
-                dustInitialStateInKeplerianElements,sunGravitationalParameter);
+            // Write dust state history in Keplerian elements to file.
+            writeDataMapToTextFile( dustStateHistoryKeplerElements, 
+                                    "dustStateHistoryKeplerElements" + fileNameBase.str( ),
+                                    outputDirectory,
+                                    "",
+                                    numeric_limits< double >::digits10,
+                                    numeric_limits< double >::digits10,
+                                    ",");
 
 
-/////////////////////////////////////////////
+            // //write DataMap to text file in Keplerian Elements
+            // writeDataMapToTextFile( dustStateHistoryCOEKeplerCoord, 
+            //                         "dustStateHistoryCOE" + definingInformation + ".dat",
+            //                         outputDirectory,
+            //                         "",
+            //                         numeric_limits< double >::digits10,
+            //                         numeric_limits< double >::digits10,
+            //                         ",");
 
-//Creates acceleration model for dust particle
+            /////////////////////////////////////////////////////////////////////// 
 
-//Create body object containing dust initial state and epoch
-const BodyPointer dust = boost::make_shared< Body >( dustInitialState );
 
-//Calculate gravitiation acceleration model for dust particle
-//Note: the Solar radius, in addition to J2, J3, and J4 are currently set to 0
-const CentralJ2J3J4GravitationalAccelerationModelPointer dustGravityModel
-        = boost::make_shared<CentralJ2J3J4GravitationalAccelerationModel >(
-            boost::bind( &Body::getCurrentPosition, dust),
-            sunGravitationalParameter, solarEquatorialRadius, J2, 0.0, 0.0);
+// //Create new data maps
 
-//Create List of acceleration models
-const CartesianStateDerivativeModel6d::AccelerationModelPointerVector dustListOfAccelerations
-        = boost::assign::list_of(dustGravityModel);
+// DoubleKeyTypeVectorXdValueTypeMap dustStateHistoryDNIKeplerFinal;
+// DoubleKeyTypeVectorXdValueTypeMap dustStateHistoryCOEKeplerFinal;
 
+// double eccentricAnomalyDNI;
+// double meanAnomalyDNI;
 
-///////////////////////////////////////////
+// double eccentricAnomalyCOE;
+// double meanAnomalyCOE;
 
-//Create state derivative model
-const CartesianStateDerivativeModel6dPointer dustStateDerivativeModel
-       = boost::make_shared< CartesianStateDerivativeModel6d >(
-        dustListOfAccelerations,boost::bind( &Body::setCurrentTimeAndState, dust, _1, _2) );
+// Convert radians to degreees for orbital elements
+// Record mean anomaly instead of true anomaly
 
-//////////////////////////////////////////
+// for(double currentEpoch = simulationStartEpoch; currentEpoch <= simulationEndEpoch; currentEpoch += fixedStepSize )
+// {
 
-//Create Runge Kutta 4 integrator and set initial conditions
-RungeKutta4Integrator<double, Vector6d, Vector6d > rungeKutta4(
-        boost::bind( &CartesianStateDerivativeModel6d::computeStateDerivative,
-                    dustStateDerivativeModel, _1, _2),
-                    0.0, (Eigen::VectorXd(6) << dustInitialState).finished() );
+//     //Record the Direct 6 Orbital Elements in dustStateHistoryDNIKeplerFinal, and formatting them as specified below
 
-//Set running time to initial Epoch
-double runningTime = simulationStartEpoch;
+//     //Record semiMajorAxis
+//     dustStateHistoryDNIKeplerFinal[currentEpoch](semiMajorAxisIndex) = 
+//                                     dustStateHistoryKeplerElements[currentEpoch](semiMajorAxisIndex);
 
-DoubleKeyTypeVectorXdValueTypeMap dustPropagationHistoryCartCoord;
-DoubleKeyTypeVectorXdValueTypeMap dustPropagationHistoryKeplerCoord;
-DoubleKeyTypeVectorXdValueTypeMap dustPropagationHistoryCOEKeplerCoord;
 
+//     //Record eccentricity index
+//     dustStateHistoryDNIKeplerFinal[currentEpoch](eccentricityIndex) = 
+//                                     dustStateHistoryKeplerElements[currentEpoch](eccentricityIndex);
 
-//Add initial state to propagation histories
-dustPropagationHistoryCartCoord[0.0] = dustInitialState;
-//dustPropagationHistoryKeplerCoord[0.0] = dustInitialStateInKeplerianElements;
-dustPropagationHistoryCOEKeplerCoord[0.0] = dustInitialStateInKeplerianElements;
+//     //Record inclination index in degrees
+//     dustStateHistoryDNIKeplerFinal[currentEpoch](inclinationIndex) = 
+//                                     convertRadiansToDegrees(dustStateHistoryKeplerElements[currentEpoch](inclinationIndex));
 
+//     //Record longitude of ascending node index in degrees
+//    /* dustStateHistoryDNIKeplerFinal[currentEpoch](longitudeOfAscendingNodeIndex) = 
+//                                     convertRadiansToDegrees(dustStateHistoryKeplerElements[currentEpoch](longitudeOfAscendingNodeIndex)); */
 
+//     //Record argument of periapsis index in degrees
+//    /* dustStateHistoryDNIKeplerFinal[currentEpoch](argumentOfPeriapsisIndex) = 
+//                                     convertRadiansToDegrees(dustStateHistoryKeplerElements[currentEpoch](argumentOfPeriapsisIndex)); */
 
 
-while (runningTime < simulationEndEpoch)
-{
-    //Perform integration step calling compute state derivative
-    Vector6d integratedState = rungeKutta4.performIntegrationStep(fixedStepSize);
 
-    //Get the current time
-    runningTime = rungeKutta4.getCurrentIndependentVariable();
+//     //Convert true anomaly to eccentric anomaly
+//    /* eccentricAnomalyDNI = convertTrueAnomalyToEccentricAnomaly(
+//                             dustStateHistoryKeplerElements[currentEpoch](trueAnomalyIndex),
+//                             dustStateHistoryKeplerElements[currentEpoch](eccentricityIndex)
+//                             );
 
-    //Add state to propagation history
-    dustPropagationHistoryCartCoord[ runningTime ] = integratedState;
+//     //Convert eccentric anomaly to mean anomaly
+//     meanAnomalyDNI = convertEccentricAnomalyToMeanAnomaly(
+//                         eccentricAnomalyDNI,
+//                         dustStateHistoryKeplerElements[currentEpoch](eccentricityIndex)
+//                         ); */
 
 
-    // Convert propagation history into Keplerian elements
-    dustPropagationHistoryKeplerCoord[runningTime] = convertCartesianToKeplerianElements(
-                  integratedState,sunGravitationalParameter);
+//     //Record mean anomaly in history rather than mean Anomaly
+//     //Actually records mean anomaly not true anomaly
+//    // dustStateHistoryDNIKeplerFinal[currentEpoch](trueAnomalyIndex) = 2.0; //meanAnomalyDNI;
 
-    //
-   dustPropagationHistoryCOEKeplerCoord[runningTime] = propagateKeplerOrbit(
-                    dustPropagationHistoryCOEKeplerCoord[runningTime - fixedStepSize],
-                    fixedStepSize,
-                    sunGravitationalParameter);
-}
 
 
+// /*
+// //For propagation of dust particle using COE
 
+//     dustStateHistoryCOEKeplerFinal[currentEpoch](semiMajorAxisIndex) = 
+//                     dustStateHistoryCOEKeplerCoord[currentEpoch](semiMajorAxisIndex);
 
-//Create new data maps
+//     dustStateHistoryCOEKeplerFinal[currentEpoch](eccentricityIndex) = 
+//                     dustStateHistoryCOEKeplerCoord[currentEpoch](eccentricityIndex);
 
-DoubleKeyTypeVectorXdValueTypeMap dustPropagationHistoryDNIKeplerFinal;
-DoubleKeyTypeVectorXdValueTypeMap dustPropagationHistoryCOEKeplerFinal;
+//     dustStateHistoryCOEKeplerFinal[currentEpoch](inclinationIndex) = 
+//                     convertRadiansToDegrees(dustStateHistoryCOEKeplerCoord[currentEpoch](inclinationIndex));
 
+//     dustStateHistoryCOEKeplerFinal[currentEpoch](longitudeOfAscendingNodeIndex) = 
+//                     convertRadiansToDegrees(dustStateHistoryCOEKeplerCoord[currentEpoch](longitudeOfAscendingNodeIndex));
 
+//     dustStateHistoryCOEKeplerFinal[currentEpoch](argumentOfPeriapsisIndex) = 
+//                     convertRadiansToDegrees(dustStateHistoryCOEKeplerCoord[currentEpoch](argumentOfPeriapsisIndex));
 
-double eccentricAnomalyDNI;
-double meanAnomalyDNI;
 
-double eccentricAnomalyCOE;
-double meanAnomalyCOE;
+//     //Convert true anomaly to eccentric anomaly
+//     eccentricAnomalyCOE = convertTrueAnomalyToEccentricAnomaly(
+//                             dustStateHistoryCOEKeplerCoord[currentEpoch](trueAnomalyIndex),
+//                             dustStateHistoryCOEKeplerCoord[currentEpoch](eccentricityIndex)
+//                             );
 
-enum keplerianElementsWithMeanAnomaly{
-    semiMajorAxisIndex,
-    eccentricityIndex,
-    inclinationIndex,
-    longitudeOfAscendingNodeIndex,
-    argumentOfPeriapsisIndex,
-    meanAnomalyIndex
-};
+//     //Convert eccentric anomaly to mean anomaly
+//     meanAnomalyCOE = convertEccentricAnomalyToMeanAnomaly(
+//                         eccentricAnomalyCOE,
+//                         dustStateHistoryCOEKeplerCoord[currentEpoch](eccentricityIndex)
+//                         );
 
 
-//Convert radians to degreees for orbital elements
-//Record mean anomaly instead of true anomaly
+//     //Record mean anomaly in history to replace to true anomaly
+//     //actually stores mean anomaly not true anomaly
+//     dustStateHistoryCOEKeplerCoord[currentEpoch](trueAnomalyIndex) = 
+//                     convertRadiansToDegrees(meanAnomalyCOE); */
 
-for(double currentEpoch = simulationStartEpoch; currentEpoch <= simulationEndEpoch; currentEpoch += fixedStepSize )
-{
+// }
+        } // for-loop over step sizes
+    } // for-loop over cases
 
-    //Record the Direct 6 Orbital Elements in dustPropagationHistoryDNIKeplerFinal, and formatting them as specified below
-
-    //Record semiMajorAxis
-    dustPropagationHistoryDNIKeplerFinal[currentEpoch](semiMajorAxisIndex) = 
-                                    dustPropagationHistoryKeplerCoord[currentEpoch](semiMajorAxisIndex);
-
-
-    //Record eccentricity index
-    dustPropagationHistoryDNIKeplerFinal[currentEpoch](eccentricityIndex) = 
-                                    dustPropagationHistoryKeplerCoord[currentEpoch](eccentricityIndex);
-
-    //Record inclination index in degrees
-    dustPropagationHistoryDNIKeplerFinal[currentEpoch](inclinationIndex) = 
-                                    convertRadiansToDegrees(dustPropagationHistoryKeplerCoord[currentEpoch](inclinationIndex));
-
-    //Record longitude of ascending node index in degrees
-   /* dustPropagationHistoryDNIKeplerFinal[currentEpoch](longitudeOfAscendingNodeIndex) = 
-                                    convertRadiansToDegrees(dustPropagationHistoryKeplerCoord[currentEpoch](longitudeOfAscendingNodeIndex)); */
-
-    //Record argument of periapsis index in degrees
-   /* dustPropagationHistoryDNIKeplerFinal[currentEpoch](argumentOfPeriapsisIndex) = 
-                                    convertRadiansToDegrees(dustPropagationHistoryKeplerCoord[currentEpoch](argumentOfPeriapsisIndex)); */
-
-
-
-    //Convert true anomaly to eccentric anomaly
-   /* eccentricAnomalyDNI = convertTrueAnomalyToEccentricAnomaly(
-                            dustPropagationHistoryKeplerCoord[currentEpoch](trueAnomalyIndex),
-                            dustPropagationHistoryKeplerCoord[currentEpoch](eccentricityIndex)
-                            );
-
-    //Convert eccentric anomaly to mean anomaly
-    meanAnomalyDNI = convertEccentricAnomalyToMeanAnomaly(
-                        eccentricAnomalyDNI,
-                        dustPropagationHistoryKeplerCoord[currentEpoch](eccentricityIndex)
-                        ); */
-
-
-    //Record mean anomaly in history rather than mean Anomaly
-    //Actually records mean anomaly not true anomaly
-   // dustPropagationHistoryDNIKeplerFinal[currentEpoch](trueAnomalyIndex) = 2.0; //meanAnomalyDNI;
-
-
-
-/*
-//For propagation of dust particle using COE
-
-    dustPropagationHistoryCOEKeplerFinal[currentEpoch](semiMajorAxisIndex) = 
-                    dustPropagationHistoryCOEKeplerCoord[currentEpoch](semiMajorAxisIndex);
-
-    dustPropagationHistoryCOEKeplerFinal[currentEpoch](eccentricityIndex) = 
-                    dustPropagationHistoryCOEKeplerCoord[currentEpoch](eccentricityIndex);
-
-    dustPropagationHistoryCOEKeplerFinal[currentEpoch](inclinationIndex) = 
-                    convertRadiansToDegrees(dustPropagationHistoryCOEKeplerCoord[currentEpoch](inclinationIndex));
-
-    dustPropagationHistoryCOEKeplerFinal[currentEpoch](longitudeOfAscendingNodeIndex) = 
-                    convertRadiansToDegrees(dustPropagationHistoryCOEKeplerCoord[currentEpoch](longitudeOfAscendingNodeIndex));
-
-    dustPropagationHistoryCOEKeplerFinal[currentEpoch](argumentOfPeriapsisIndex) = 
-                    convertRadiansToDegrees(dustPropagationHistoryCOEKeplerCoord[currentEpoch](argumentOfPeriapsisIndex));
-
-
-    //Convert true anomaly to eccentric anomaly
-    eccentricAnomalyCOE = convertTrueAnomalyToEccentricAnomaly(
-                            dustPropagationHistoryCOEKeplerCoord[currentEpoch](trueAnomalyIndex),
-                            dustPropagationHistoryCOEKeplerCoord[currentEpoch](eccentricityIndex)
-                            );
-
-    //Convert eccentric anomaly to mean anomaly
-    meanAnomalyCOE = convertEccentricAnomalyToMeanAnomaly(
-                        eccentricAnomalyCOE,
-                        dustPropagationHistoryCOEKeplerCoord[currentEpoch](eccentricityIndex)
-                        );
-
-
-    //Record mean anomaly in history to replace to true anomaly
-    //actually stores mean anomaly not true anomaly
-    dustPropagationHistoryCOEKeplerCoord[currentEpoch](trueAnomalyIndex) = 
-                    convertRadiansToDegrees(meanAnomalyCOE); */
-
-}
-
-
-//////////////////////////////////////
-
-//converts case number and stepsize values as strings
-stringstream convertCaseNumber;
-stringstream convertFixedStepsize;
-convertCaseNumber << caseNumber;
-convertFixedStepsize << fixedStepSize;
-string strCaseNumber = convertCaseNumber.str();
-string strFixedStepSize = convertFixedStepsize.str();
-
-//concatenates the caseNumber and fixedStepSize 
-//to be recorded in the name of the outputted file
-//Note: the "s" is for seconds
-string definingInformation = "Case" + strCaseNumber + "_" + strFixedStepSize + "s";
-
-
-
-
-//Write DataMap to text file in Cartesian Elements
-writeDataMapToTextFile( dustPropagationHistoryCartCoord, 
-                        "dustPropagationHistoryDNICart" + definingInformation + ".dat",
-                        outputDirectory,
-                        "",
-                        numeric_limits< double >::digits10,
-                        numeric_limits< double >::digits10,
-                        ",");
-
-//write DataMap to text file in Keplerian Elements
-writeDataMapToTextFile( dustPropagationHistoryKeplerCoord, 
-                        "dustPropagationHistoryDNI" + definingInformation + ".dat",
-                        outputDirectory,
-                        "",
-                        numeric_limits< double >::digits10,
-                        numeric_limits< double >::digits10,
-                        ",");
-
-
-//write DataMap to text file in Keplerian Elements
-writeDataMapToTextFile( dustPropagationHistoryCOEKeplerCoord, 
-                        "dustPropagationHistoryCOE" + definingInformation + ".dat",
-                        outputDirectory,
-                        "",
-                        numeric_limits< double >::digits10,
-                        numeric_limits< double >::digits10,
-                        ",");
-}
-
-}
+    ///////////////////////////////////////////////////////////////////////
     
-    return 0;
+    // If this point is reached, exit program with success integer.
+    return EXIT_SUCCESS;
 }
