@@ -31,6 +31,9 @@
 %    Notes
 %
 
+
+%This file plots the data for test cases between a 
+
 clear all; close all; clc;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -38,104 +41,79 @@ clear all; close all; clc;
 % Input deck.
 
 % Set simulation data files.
-dataFileLocation = '/Users/sethmichaelhirsh/Desktop/Tudat/RawData/Cases/dustPropagationHistory'
+dataFileDirectory = '/Users/sethmichaelhirsh/Desktop/Tudat/RawData/Cases/Correct Data/';
+
+numCases = 5;
 
 
-% Case 1
-dphCOE1_10s = csvread(strcat(dataFileLocation,'COECase1_10s.dat'));
-dphCOE1_60s = csvread(strcat(dataFileLocation, 'COECase1_60s.dat'));
-dphDNI1_10s = csvread(strcat(dataFileLocation, 'DNICase1_10s.dat'));
-dphDNI1_60s = csvread(strcat(dataFileLocation, 'DNICase1_60s.dat'));
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%Creates n x 6 arrays containing the difference in the orbital elements
-diffOrbitalElem1_60s = dphDNI1_60s(:,2:end) - dphCOE1_60s(:,2:end);
-diffOrbitalElem1_10s = dphDNI1_10s(:,2:end) - dphCOE1_10s(:,2:end);
+%Loop through cases recording the data and the difference in the data in
+%cell arrays.
 
+for i = 1:numCases
+    
+    %Store all of COE data in cell array with numCases elements
+    COEDataFiles{i} = csvread(strcat(dataFileDirectory,...
+                                            'dustPropagationHistoryCOECase',... 
+                                            num2str(i),...
+                                            '_60s.dat'));
+                                        
+%Store all of the DNI data in cell array with numCases elements
+    DNIDataFiles{i} = csvread(strcat(dataFileDirectory,...
+                                            'dustPropagationHistoryDNICase',... 
+                                            num2str(i),...
+                                            '_60s.dat'));
 
+%Record the difference in the DNI and COE data in a cell array with
+%numCases elements
+    DifferenceInDataFiles{i} = DNIDataFiles{i} - COEDataFiles{i};
 
-% Case 2
-dphCOE2_10s = csvread(strcat(dataFileLocation,'COECase2_10s.dat'));
-dphCOE2_60s = csvread(strcat(dataFileLocation, 'COECase2_60s.dat'));
-dphDNI2_10s = csvread(strcat(dataFileLocation, 'DNICase2_10s.dat'));
-dphDNI2_60s = csvread(strcat(dataFileLocation, 'DNICase2_60s.dat'));
-
-%Creates n x 6 arrays containing the difference in the orbital elements
-diffOrbitalElem2_60s = dphDNI2_60s(:,2:end) - dphCOE2_60s(:,2:end);
-diffOrbitalElem2_10s = dphDNI2_10s(:,2:end) - dphCOE2_10s(:,2:end);
-
-
-
-% Case 3
-dphCOE3_10s = csvread(strcat(dataFileLocation,'COECase3_10s.dat'));
-dphCOE3_60s = csvread(strcat(dataFileLocation, 'COECase3_60s.dat'));
-dphDNI3_10s = csvread(strcat(dataFileLocation, 'DNICase3_10s.dat'));
-dphDNI3_60s = csvread(strcat(dataFileLocation, 'DNICase3_60s.dat'));
-
-%Creates n x 6 arrays containing the difference in the orbital elements
-diffOrbitalElem3_60s = dphDNI3_60s(:,2:end) - dphCOE3_60s(:,2:end);
-diffOrbitalElem3_10s = dphDNI3_10s(:,2:end) - dphCOE3_10s(:,2:end);
-
-
-
-% Case 4
-dphCOE4_10s = csvread(strcat(dataFileLocation,'COECase4_10s.dat'));
-dphCOE4_60s = csvread(strcat(dataFileLocation, 'COECase4_60s.dat'));
-dphDNI4_10s = csvread(strcat(dataFileLocation, 'DNICase4_10s.dat'));
-dphDNI4_60s = csvread(strcat(dataFileLocation, 'DNICase4_60s.dat'));
-
-%Creates n x 6 arrays containing the difference in the orbital elements
-diffOrbitalElem4_60s = dphDNI4_60s(:,2:end) - dphCOE4_60s(:,2:end);
-diffOrbitalElem4_10s = dphDNI4_10s(:,2:end) - dphCOE4_10s(:,2:end);
-
-
-
-% Case 5
-dphCOE5_10s = csvread(strcat(dataFileLocation,'COECase5_10s.dat'));
-dphCOE5_60s = csvread(strcat(dataFileLocation, 'COECase5_60s.dat'));
-dphDNI5_10s = csvread(strcat(dataFileLocation, 'DNICase5_10s.dat'));
-dphDNI5_60s = csvread(strcat(dataFileLocation, 'DNICase5_60s.dat'));
-
-%Creates n x 6 arrays containing the difference in the orbital elements
-diffOrbitalElem5_60s = dphDNI5_60s(:,2:end) - dphCOE5_60s(:,2:end);
-diffOrbitalElem5_10s = dphDNI5_10s(:,2:end) - dphCOE5_10s(:,2:end);
-
+end
 
 
 %time data
-time_data60s = dphCOE1_60s(:,1);
-time_data10s = dphCOE1_10s(:,1);
+%Note: Assumes that the time data is the same for all of the cases
+time_data60s = COEDataFiles{1}(:,1);
 
 
 
-fig1 = figure;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%The following codes plots a set of subplots
+%Each subplot is a plot of the difference of the DNI and COE integration
+%methods for each orbital element and for each of the test cases with respect
+%to time
 
 
-%Semi Major axis
-subplot(3,2,1)
-%axis([0.0 7e5 -200 50])
+
+
+%gets the current screen size and produces a figure with the specified
+%position
+scrsz = get(0,'ScreenSize');
+figure('Position',[1 1 scrsz(3)/2 scrsz(4)]);
+
+
+
+%plot the Semi Major axis
+semiMajorAxisPlot = subplot(3,2,1);
 hold all
-plot(time_data60s,diffOrbitalElem1_60s(:,1))
-plot(time_data60s,diffOrbitalElem2_60s(:,1))
-plot(time_data60s,diffOrbitalElem3_60s(:,1))
-plot(time_data60s,diffOrbitalElem4_60s(:,1))
-plot(time_data60s,diffOrbitalElem5_60s(:,1))
-
+for i = 1:numCases
+    plot(time_data60s, DifferenceInDataFiles{i}(:,2)./COEDataFiles{i}(:,2))
+end
 title('Difference in Semi-major Axis')
 xlabel('Time (sec)')
-ylabel('Semi-Major Axis')
-
-
+ylabel('Semi-Major Axis (m)')
 legend('Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
 
-%Eccentricity
-subplot(3,2,2)
-hold all
-plot(time_data60s,diffOrbitalElem1_60s(:,2))
-plot(time_data60s,diffOrbitalElem2_60s(:,2))
-plot(time_data60s,diffOrbitalElem3_60s(:,2))
-plot(time_data60s,diffOrbitalElem4_60s(:,2))
-plot(time_data60s,diffOrbitalElem5_60s(:,2))
 
+
+%Eccentricity
+eccentricityPlot = subplot(3,2,2);
+hold all
+for i = 1:numCases
+    plot(time_data60s, DifferenceInDataFiles{i}(:,3))
+end
 title('Difference in Eccentricity')
 xlabel('Time (sec)')
 ylabel('Eccentricity')
@@ -143,30 +121,24 @@ ylabel('Eccentricity')
 legend('Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
 
 %Inclination
-subplot(3,2,3)
+inclinationPlot = subplot(3,2,3);
 hold all
-plot(time_data60s,diffOrbitalElem1_60s(:,3))
-plot(time_data60s,diffOrbitalElem2_60s(:,3))
-plot(time_data60s,diffOrbitalElem3_60s(:,3))
-plot(time_data60s,diffOrbitalElem4_60s(:,3))
-plot(time_data60s,diffOrbitalElem5_60s(:,3))
-
-title('Difference in Eccentricity')
+for i = 1:numCases
+    plot(time_data60s, DifferenceInDataFiles{i}(:,4))
+end
+title('Difference in Inclination')
 xlabel('Time (sec)')
-ylabel('Eccentricity')
+ylabel('Inclination')
 
 legend('Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
 
 
 %Argument of Periapsis
-subplot(3,2,4)
+argumentOfPeriapsisPlot = subplot(3,2,4);
 hold all
-plot(time_data60s,diffOrbitalElem1_60s(:,4))
-plot(time_data60s,diffOrbitalElem2_60s(:,4))
-plot(time_data60s,diffOrbitalElem3_60s(:,4))
-plot(time_data60s,diffOrbitalElem4_60s(:,4))
-plot(time_data60s,diffOrbitalElem5_60s(:,4))
-
+for i = 1:numCases
+    plot(time_data60s, DifferenceInDataFiles{i}(:,5))
+end
 title('Difference in Argument of Periapsis')
 xlabel('Time (sec)')
 ylabel('Argument of Periapsis')
@@ -174,14 +146,11 @@ ylabel('Argument of Periapsis')
 legend('Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
 
 %Longitude of Ascending Node
-subplot(3,2,5)
+longitudeOfAscendingNodePlot = subplot(3,2,5);
 hold all
-plot(time_data60s,diffOrbitalElem1_60s(:,5))
-plot(time_data60s,diffOrbitalElem2_60s(:,5))
-plot(time_data60s,diffOrbitalElem3_60s(:,5))
-plot(time_data60s,diffOrbitalElem4_60s(:,5))
-plot(time_data60s,diffOrbitalElem5_60s(:,5))
-
+for i = 1:numCases
+    plot(time_data60s, DifferenceInDataFiles{i}(:,6))
+end
 title('Difference in Longitude of Ascending Node')
 xlabel('Time (sec)')
 ylabel('Longitude of Ascending Node')
@@ -189,57 +158,35 @@ ylabel('Longitude of Ascending Node')
 legend('Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
 
 %Longitude of Mean Anomaly
-subplot(3,2,6)
+meanAnomalyPlot = subplot(3,2,6);
 hold all
-diffMeanAnomaly1 = smallestMagnitude(diffOrbitalElem1_60s(:,6),(360 + diffOrbitalElem1_60s(:,6)));
-diffMeanAnomaly2 = smallestMagnitude(diffOrbitalElem2_60s(:,6),(360 + diffOrbitalElem2_60s(:,6)));
-diffMeanAnomaly3 = smallestMagnitude(diffOrbitalElem3_60s(:,6),(360 + diffOrbitalElem3_60s(:,6)));
-diffMeanAnomaly4 = smallestMagnitude(diffOrbitalElem4_60s(:,6),(360 + diffOrbitalElem4_60s(:,6)));
-diffMeanAnomaly5 = smallestMagnitude(diffOrbitalElem5_60s(:,6),(360 + diffOrbitalElem5_60s(:,6)));
-
-
-plot(time_data60s,diffMeanAnomaly1);
-plot(time_data60s,diffMeanAnomaly2);
-plot(time_data60s,diffMeanAnomaly3);
-plot(time_data60s,diffMeanAnomaly4);
-plot(time_data60s,diffMeanAnomaly5);
-
+for i = 1:numCases
+    
+    %In the mean anomaly data there is an issue that in one data file the
+    %mean anomaly may be recorded as very close to 360 degrees while in the
+    %corresponding file the mean anomaly is recorded as very close to 0
+    %degrees. Using the smallest magnitude function this code attempts to
+    %handle the fact that the difference in these values would be 0 degrees
+    %rather than -360 degrees
+    meanAnomalyValues = smallestMagnitude(DifferenceInDataFiles{i}(:,7),360 ...
+                        + DifferenceInDataFiles{i}(:,7));
+                        
+    plot(time_data60s,meanAnomalyValues)
+end
 title('Difference in Mean Anomaly')
 xlabel('Time (sec)')
 ylabel('Mean Anomaly')
 
-legend('Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
 
+
+% Set the 'super title' to appear above all of the subplots
 suptitle('Difference in Orbital Elements with Step Size of 60 s')
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Read and store simulation data files.
-% First column is epoch, subsequent columns are Cartesian state elements.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Plot orbits of Asterix and Obelix.
-% Simulation data is given in m and m/s, so needs to be converted to km.
-
-
-
+%Legends are diplayed at the end because of interference from suptitle
+legend(semiMajorAxisPlot,'Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
+legend(eccentricityPlot,'Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
+legend(inclinationPlot,'Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
+legend(longitudeOfAscendingNodePlot,'Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
+legend(argumentOfPeriapsisPlot,'Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
+legend(meanAnomalyPlot,'Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
