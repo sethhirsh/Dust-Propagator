@@ -1,7 +1,15 @@
+<<<<<<< HEAD
  #    Copyright (c) 2010-2013, S. Hirsh
  #    Copyright (c) 2010-2013, Delft University of Technology
  #    All rights reserved.
  #    See COPYING for license details.
+=======
+ #    Copyright (c) 2013, S. Hirsh
+ #    Copyright (c) 2013, K. Kumar
+ #    Copyright (c) 2010-2013, Delft University of Technology
+ #    All rights reserved.
+ #    See COPYING or http://bit.ly/1cFRf75 for license details.
+>>>>>>> d5e24de37b4a12e841bf0329e63eb9395001c611
  #
  #    Changelog
  #      YYMMDD    Author            Comment
@@ -13,15 +21,10 @@
  #      130222    K. Kumar          Updated directory definitions.
  #      130225    K. Kumar          Updated set-function calls to check if variables have been set
  #                                  already.
- #     130326    K. Kumar           Added BUILD_DOCUMENTATION option for Doxygen html output
+ #      130326    K. Kumar          Added BUILD_DOCUMENTATION option for Doxygen html output
  #                                  generation; removed -O3 flag since it is set by "Release"
  #                                  build type if selected; updated install steps; re-organized
  #                                  file to isolate user-specified section.
- #
- #    References
- #
- #    Notes
- #
 
 # Specify minimum CMake version required.
 cmake_minimum_required(VERSION 2.6)

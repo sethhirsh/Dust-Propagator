@@ -1,21 +1,19 @@
- #    Copyright (c) 2010-2013, S. Hirsh
+ #    Copyright (c) 2013, S. Hirsh
+ #    Copyright (c) 2013, K. Kumar
  #    Copyright (c) 2010-2013, Delft University of Technology
  #    All rights reserved.
- #    See COPYING for license details.
+ #    See COPYING or http://bit.ly/1cFRf75 for license details.
  #
  #    Changelog
  #      YYMMDD    Author            Comment
  #      120210    S.Billemont       File created.
  #	    120522	  A. Ronse          Included options for setting Tudat paths.
  #
- #    References
- #
  #    Notes
  #      This file contains all the settings that the user can override to allow for the detection
  #      of various required components and customization of the Tudat installation.
  #
  #      If you want to use this file, rename to "UserSettings.txt".
- #
 	
  #--------------------------------------
  # Tudat
