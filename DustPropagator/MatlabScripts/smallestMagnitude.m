@@ -1,6 +1,9 @@
 function [ result ] = smallestMagnitude(list1, list2)
-%UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
+%inputs two vectors of equal length
+%compares pair of elements of the two vectors and stores the element of
+%smallest magnitude in vector
+
+%returns a vector of the same length as the two inputted vectors
 
 finalList = zeros(size(list1));
 
@@ -20,6 +23,6 @@ for i = 1:size(list1)
     
 end
 
-    result = finalList
+    result = finalList;
 end
 

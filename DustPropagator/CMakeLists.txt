@@ -1,26 +1,15 @@
+<<<<<<< HEAD
+ #    Copyright (c) 2010-2013, S. Hirsh
  #    Copyright (c) 2010-2013, Delft University of Technology
  #    All rights reserved.
- #
- #    Redistribution and use in source and binary forms, with or without modification, are
- #    permitted provided that the following conditions are met:
- #      - Redistributions of source code must retain the above copyright notice, this list of
- #        conditions and the following disclaimer.
- #      - Redistributions in binary form must reproduce the above copyright notice, this list of
- #        conditions and the following disclaimer in the documentation and/or other materials
- #        provided with the distribution.
- #      - Neither the name of the Delft University of Technology nor the names of its contributors
- #        may be used to endorse or promote products derived from this software without specific
- #        prior written permission.
- #
- #    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
- #    OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- #    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- #    COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- #    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- #    GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- #    AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- #    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- #    OF THE POSSIBILITY OF SUCH DAMAGE.
+ #    See COPYING for license details.
+=======
+ #    Copyright (c) 2013, S. Hirsh
+ #    Copyright (c) 2013, K. Kumar
+ #    Copyright (c) 2010-2013, Delft University of Technology
+ #    All rights reserved.
+ #    See COPYING or http://bit.ly/1cFRf75 for license details.
+>>>>>>> d5e24de37b4a12e841bf0329e63eb9395001c611
  #
  #    Changelog
  #      YYMMDD    Author            Comment
@@ -32,15 +21,10 @@
  #      130222    K. Kumar          Updated directory definitions.
  #      130225    K. Kumar          Updated set-function calls to check if variables have been set
  #                                  already.
- #     130326    K. Kumar           Added BUILD_DOCUMENTATION option for Doxygen html output
+ #      130326    K. Kumar          Added BUILD_DOCUMENTATION option for Doxygen html output
  #                                  generation; removed -O3 flag since it is set by "Release"
  #                                  build type if selected; updated install steps; re-organized
  #                                  file to isolate user-specified section.
- #
- #    References
- #
- #    Notes
- #
 
 # Specify minimum CMake version required.
 cmake_minimum_required(VERSION 2.6)

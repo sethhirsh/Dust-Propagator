@@ -32,7 +32,10 @@
 %
 
 
-%This file plots the data for test cases between a 
+%This file plots the data for test cases between data calculating the
+%trajectory of a dust particl Direct Numerical Integration (DNI) and through 
+%integration of the 6 classical Keplerian elements (COE). Plots of the relative
+%error of the DNI data are displayed. 
 
 clear all; close all; clc;
 
@@ -81,9 +84,9 @@ time_data = COEDataFiles{1}(:,1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %The following codes plots a set of subplots
-%Each subplot is a plot of the difference of the DNI and COE integration
-%methods for each orbital element and for each of the test cases with respect
-%to time
+%Each subplot is a plots the relative error of the DNI data with respect to
+%the COE data for each orbital element and for each of the test cases with 
+%respect to time
 
 
 
@@ -99,11 +102,11 @@ figure('Position',[1 1 scrsz(3)/2 scrsz(4)]);
 semiMajorAxisPlot = subplot(3,2,1);
 hold all
 for i = 1:numCases
-    plot(time_data, DifferenceInDataFiles{i}(:,2))
+    plot(time_data, DifferenceInDataFiles{i}(:,2)./COEDataFiles{i}(:,2))
 end
-title('Difference in Semi-major Axis')
+title('Relative Error in Semi-major Axis')
 xlabel('Time (sec)')
-ylabel('Semi-Major Axis (m)')
+ylabel('Semi-Major Axis')
 legend('Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
 
 
@@ -112,9 +115,9 @@ legend('Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
 eccentricityPlot = subplot(3,2,2);
 hold all
 for i = 1:numCases
-    plot(time_data, DifferenceInDataFiles{i}(:,3))
+    plot(time_data, DifferenceInDataFiles{i}(:,3)./COEDataFiles{i}(:,5))
 end
-title('Difference in Eccentricity')
+title('Relative Error in Eccentricity')
 xlabel('Time (sec)')
 ylabel('Eccentricity')
 
@@ -124,9 +127,9 @@ legend('Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
 inclinationPlot = subplot(3,2,3);
 hold all
 for i = 1:numCases
-    plot(time_data, DifferenceInDataFiles{i}(:,4))
+    plot(time_data, DifferenceInDataFiles{i}(:,4)./COEDataFiles{i}(:,4))
 end
-title('Difference in Inclination')
+title('Relative Error in Inclination')
 xlabel('Time (sec)')
 ylabel('Inclination')
 
@@ -137,9 +140,9 @@ legend('Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
 argumentOfPeriapsisPlot = subplot(3,2,4);
 hold all
 for i = 1:numCases
-    plot(time_data, DifferenceInDataFiles{i}(:,5))
+    plot(time_data, DifferenceInDataFiles{i}(:,5)./COEDataFiles{i}(:,5))
 end
-title('Difference in Argument of Periapsis')
+title('Relative Error in Argument of Periapsis')
 xlabel('Time (sec)')
 ylabel('Argument of Periapsis')
 
@@ -149,9 +152,9 @@ legend('Case I', 'Case II', 'Case III', 'Case IV', 'Case V');
 longitudeOfAscendingNodePlot = subplot(3,2,5);
 hold all
 for i = 1:numCases
-    plot(time_data, DifferenceInDataFiles{i}(:,6))
+    plot(time_data, DifferenceInDataFiles{i}(:,6)./COEDataFiles{i}(:,6))
 end
-title({'Difference in';'Longitude of Ascending Node'})
+title({'Relative Error in';'Longitude of Ascending Node'})
 xlabel('Time (sec)')
 ylabel('Longitude of Ascending Node')
 
@@ -168,10 +171,10 @@ for i = 1:numCases
     %degrees. Using the smallest magnitude function this code attempts to
     %handle the fact that the difference in these values would be 0 degrees
     %rather than -360 degrees
-    meanAnomalyValues = smallestMagnitude(DifferenceInDataFiles{i}(:,7),360 ...
+    differenceInMeanAnomalyValues = smallestMagnitude(DifferenceInDataFiles{i}(:,7),360 ...
                         + DifferenceInDataFiles{i}(:,7));
                         
-    plot(time_data,meanAnomalyValues)
+    plot(time_data,differenceInMeanAnomalyValues./COEDataFiles{i}(:,7))
 end
 title('Difference in Mean Anomaly')
 xlabel('Time (sec)')
