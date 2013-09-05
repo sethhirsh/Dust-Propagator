@@ -95,7 +95,7 @@ int main( )
     // Set up input deck.
 
     // Set output directory.
-    const string outputDirectory = "";
+    const string outputDirectory = "/Users/kartikkumar/Desktop/";
 
     // Set simulation start epoch.
     const double simulationStartEpoch = 0.0;
@@ -273,173 +273,167 @@ int main( )
 
             ///////////////////////////////////////////////////////////////////////
 
+            ///////////////////////////////////////////////////////////////////////
 
-        //     //Convert statehistory data to desired output format
+            // Convert state history data to desired output format.
+            // Convert radians to degrees for orbital elements.
+            // Record mean anomaly instead of true anomaly.
 
-        //     // Convert radians to degreees for orbital elements
-        //     // Record mean anomaly instead of true anomaly
+            // Create new data maps to record final formats of dust state histories.
+            DoubleKeyTypeVectorXdValueTypeMap dustStateHistoryKeplerElementsFinalFormat;
+            DoubleKeyTypeVectorXdValueTypeMap dustStateHistoryKeplerElementsBenchmarkFinalFormat;
 
+            // KK: It's safer to loop through data maps using iterators.
 
-        //     //Create new data maps to record final formats of dust state histories
-        //     DoubleKeyTypeVectorXdValueTypeMap dustStateHistoryKeplerElementsFinalFormat;
-        //     DoubleKeyTypeVectorXdValueTypeMap dustStateHistoryKeplerElementsBenchmarkFinalFormat;
+            // Loop through the dust state history in Kepler elements, recording data in new data
+            // maps and formatting them as specified below.
+            for ( DoubleKeyTypeVectorXdValueTypeMap::iterator iteratorDustStateHistory 
+                  = dustStateHistoryKeplerElements.begin( );
+                  iteratorDustStateHistory != dustStateHistoryKeplerElements.end( );
+                  iteratorDustStateHistory++ )
+            {        
+                // Create vector to store current state in final format.
+                Vector6d dustCurrentStateFormatted;
 
+                // Record semi-major axis [m]
+                dustCurrentStateFormatted( semiMajorAxisIndex ) 
+                    = iteratorDustStateHistory->second( semiMajorAxisIndex );
 
-        //     //Loop through the dust state histories recording data in new data maps and formatting them
-        //     //as specified below
+                // Record eccentricity [-]
+                dustCurrentStateFormatted( eccentricityIndex ) 
+                    = iteratorDustStateHistory->second( eccentricityIndex );
 
-        //     for(double currentEpoch = simulationStartEpoch; currentEpoch <= simulationEndEpoch; currentEpoch += fixedStepSize )
-        //     {
+                // Record inclination and convert it to degrees [deg].
+                dustCurrentStateFormatted( inclinationIndex ) 
+                    = convertRadiansToDegrees( 
+                        iteratorDustStateHistory->second( inclinationIndex ) );
 
+                // Record longitude of ascending node and convert it to degrees [deg].
+                dustCurrentStateFormatted( longitudeOfAscendingNodeIndex )
+                    = convertRadiansToDegrees( 
+                        iteratorDustStateHistory->second( longitudeOfAscendingNodeIndex ) );
 
+                // Record argument of periapsis and convert it to degrees [deg].
+                dustCurrentStateFormatted(argumentOfPeriapsisIndex)
+                    = convertRadiansToDegrees( 
+                        iteratorDustStateHistory->second( argumentOfPeriapsisIndex ) );
 
-        //     //Record the Direct 6 Orbital Elements in dustStateHistoryCurrentStateFormattedBenchmark,
-        //     //and formatting them as specified below. 
+                // Calculate the eccentric anomaly at the current state [rad].
+                const double eccentricAnomalyCurrentState
+                    = convertTrueAnomalyToEccentricAnomaly(
+                        iteratorDustStateHistory->second( trueAnomalyIndex ),
+                        iteratorDustStateHistory->second( eccentricityIndex ) );
 
+                // Calculate the mean anomaly at the current state [rad].
+                const double meanAnomalyCurrentState
+                    = convertEccentricAnomalyToMeanAnomaly(
+                        eccentricAnomalyCurrentState,
+                        iteratorDustStateHistory->second( eccentricityIndex ) );
 
-        //     //Create vector to store current benchmark state in final format.
-        //     Vector6d dustCurrentStateFormattedBenchmark;
+                // Record the mean anomaly and convert it to degrees [deg].
+                dustCurrentStateFormatted( meanAnomalyIndex )
+                    = convertRadiansToDegrees( meanAnomalyCurrentState );
 
-        //     //Record semi-major axis
-        //     dustCurrentStateFormattedBenchmark(semiMajorAxisIndex) 
-        //         = dustStateHistoryKeplerElementsBenchmark[currentEpoch](semiMajorAxisIndex);
+                // Store the vector containing the direct 6 orbital rlements in state history
+                dustStateHistoryKeplerElementsFinalFormat[ iteratorDustStateHistory->first ] 
+                    = dustCurrentStateFormatted;
+            }
 
-        //     //Record eccentricity
-        //     dustCurrentStateFormattedBenchmark(eccentricityIndex) 
-        //         = dustStateHistoryKeplerElementsBenchmark[currentEpoch](eccentricityIndex);
+            // Loop through the dust state history in Kepler elements for the benchmark, recording 
+            // data in new data maps and formatting them as specified below.
+            for ( DoubleKeyTypeVectorXdValueTypeMap::iterator iteratorDustStateHistory 
+                  = dustStateHistoryKeplerElementsBenchmark.begin( );
+                  iteratorDustStateHistory != dustStateHistoryKeplerElementsBenchmark.end( );
+                  iteratorDustStateHistory++ )
+            {        
+                // Create vector to store current benchmark state in final format.
+                Vector6d dustCurrentStateFormattedBenchmark;
 
-        //     //Record inclination and convert it to degrees
-        //     dustCurrentStateFormattedBenchmark(inclinationIndex) 
-        //         = convertRadiansToDegrees(
-        //             dustStateHistoryKeplerElementsBenchmark[currentEpoch](inclinationIndex));
+                // Record semi-major axis [m].
+                dustCurrentStateFormattedBenchmark( semiMajorAxisIndex ) 
+                = iteratorDustStateHistory->second( semiMajorAxisIndex );
 
-        //     //Record longitude of ascending node and convert it to degrees
-        //     dustCurrentStateFormattedBenchmark(longitudeOfAscendingNodeIndex)
-        //         = convertRadiansToDegrees(
-        //             dustStateHistoryKeplerElementsBenchmark[currentEpoch](longitudeOfAscendingNodeIndex));
+                // Record eccentricity [m].
+                dustCurrentStateFormattedBenchmark( eccentricityIndex ) 
+                    = iteratorDustStateHistory->second( eccentricityIndex );
 
-        //     //Record argument of periapsis and convert it to degrees
-        //     dustCurrentStateFormattedBenchmark(argumentOfPeriapsisIndex)
-        //         = convertRadiansToDegrees(
-        //             dustStateHistoryKeplerElementsBenchmark[currentEpoch](longitudeOfAscendingNodeIndex));
+                // Record inclination and convert it to degrees [deg].
+                dustCurrentStateFormattedBenchmark( inclinationIndex ) 
+                    = convertRadiansToDegrees(
+                        iteratorDustStateHistory->second( inclinationIndex ) );
 
-        //     //Calculate the eccentric anomaly at the current state
-        //     double eccentricAnomalyCurrentStateBenchmarkInRadians
-        //         = convertTrueAnomalyToEccentricAnomaly(
-        //             dustStateHistoryKeplerElementsBenchmark[currentEpoch](trueAnomalyIndex),
-        //             dustStateHistoryKeplerElementsBenchmark[currentEpoch](eccentricityIndex));
+                // Record longitude of ascending node and convert it to degrees [deg].
+                dustCurrentStateFormattedBenchmark( longitudeOfAscendingNodeIndex )
+                    = convertRadiansToDegrees( 
+                        iteratorDustStateHistory->second( longitudeOfAscendingNodeIndex ) );
 
-        //     //Calculate the mean anomaly at the current state
-        //     double meanAnomalyCurrentStateBenchmarkInRadians
-        //         = convertEccentricAnomalyToMeanAnomaly(
-        //             eccentricAnomalyCurrentStateBenchmarkInRadians,
-        //             dustStateHistoryKeplerElementsBenchmark[currentEpoch](eccentricityIndex));
+                // Record argument of periapsis and convert it to degrees [deg].
+                dustCurrentStateFormattedBenchmark( argumentOfPeriapsisIndex )
+                    = convertRadiansToDegrees(
+                        iteratorDustStateHistory->second( argumentOfPeriapsisIndex ) );
 
-        //     //Record the mean anomaly and convert it to degrees
-        //     dustCurrentStateFormattedBenchmark(meanAnomalyIndex)
-        //         = convertRadiansToDegrees(meanAnomalyCurrentStateBenchmarkInRadians);
+                // Calculate the eccentric anomaly at the current state [rad].
+                const double eccentricAnomalyCurrentStateBenchmark
+                    = convertTrueAnomalyToEccentricAnomaly(
+                        iteratorDustStateHistory->second( trueAnomalyIndex ),
+                        iteratorDustStateHistory->second( eccentricityIndex ) );
 
-        //     //Store the vector containing the Direct 6 Orbital Elements in state history
-        //     dustStateHistoryKeplerElementsBenchmarkFinalFormat[currentEpoch] 
-        //         = dustCurrentStateFormattedBenchmark;
+                // Calculate the mean anomaly at the current state [rad].
+                const double meanAnomalyCurrentStateBenchmark
+                    = convertEccentricAnomalyToMeanAnomaly(
+                        eccentricAnomalyCurrentStateBenchmark,
+                        iteratorDustStateHistory->second( eccentricityIndex ) );
 
+                // Record the mean anomaly and convert it to degrees [deg].
+                dustCurrentStateFormattedBenchmark( meanAnomalyIndex )
+                    = convertRadiansToDegrees( meanAnomalyCurrentStateBenchmark );
 
-        //     //////////////////////////////////////////////////////////////////////////////////////
+                // Store the vector containing the direct 6 orbital rlements in state history.
+                dustStateHistoryKeplerElementsBenchmarkFinalFormat[ 
+                    iteratorDustStateHistory->first ] 
+                        = dustCurrentStateFormattedBenchmark;
+            }
 
+            ///////////////////////////////////////////////////////////////////////
 
-        //     //Record the Direct 6 Orbital Elements in dustStateHistoryCurrentStateFormatted,
-        //     //and formatting them as specified below. 
+            ///////////////////////////////////////////////////////////////////////////////////
 
+            // Write state histories to files.
 
-        //     //Create vector to store current state in final format.
-        //     Vector6d dustCurrentStateFormatted;
+            // Convert case number and stepsize values as strings.
+            std::ostringstream fileNameBase;
+            fileNameBase << "_case" << caseNumber + 1 << "_" << fixedStepSize << "s.dat";
 
-        //     //Record semi-major axis
-        //     dustCurrentStateFormatted(semiMajorAxisIndex) 
-        //         = dustStateHistoryKeplerElements[currentEpoch](semiMajorAxisIndex);
+            // Write dust state history in Cartesian elements to file.
+            writeDataMapToTextFile( dustStateHistory, 
+                                    "dustStateHistory" + fileNameBase.str( ),
+                                    outputDirectory,
+                                    "",
+                                    numeric_limits< double >::digits10,
+                                    numeric_limits< double >::digits10,
+                                    "," );
 
-        //     //Record eccentricity
-        //     dustCurrentStateFormatted(eccentricityIndex) 
-        //         = dustStateHistoryKeplerElements[currentEpoch](eccentricityIndex);
-
-        //     //Record inclination and convert it to degrees
-        //     dustCurrentStateFormatted(inclinationIndex) 
-        //         = convertRadiansToDegrees(
-        //             dustStateHistoryKeplerElements[currentEpoch](inclinationIndex));
-
-        //     //Record longitude of ascending node and convert it to degrees
-        //     dustCurrentStateFormatted(longitudeOfAscendingNodeIndex)
-        //         = convertRadiansToDegrees(
-        //             dustStateHistoryKeplerElements[currentEpoch](longitudeOfAscendingNodeIndex));
-
-        //     //Record argument of periapsis and convert it to degrees
-        //     dustCurrentStateFormatted(argumentOfPeriapsisIndex)
-        //         = convertRadiansToDegrees(
-        //             dustStateHistoryKeplerElements[currentEpoch](longitudeOfAscendingNodeIndex));
-
-        //     //Calculate the eccentric anomaly at the current state
-        //     double eccentricAnomalyCurrentStateInRadians
-        //         = convertTrueAnomalyToEccentricAnomaly(
-        //             dustStateHistoryKeplerElements[currentEpoch](trueAnomalyIndex),
-        //             dustStateHistoryKeplerElements[currentEpoch](eccentricityIndex));
-
-        //     //Calculate the mean anomaly at the current state
-        //     double meanAnomalyCurrentStateInRadians
-        //         = convertEccentricAnomalyToMeanAnomaly(
-        //             eccentricAnomalyCurrentStateInRadians,
-        //             dustStateHistoryKeplerElements[currentEpoch](eccentricityIndex));
-
-        //     //Record the mean anomaly and convert it to degrees
-        //     dustCurrentStateFormatted(meanAnomalyIndex)
-        //         = convertRadiansToDegrees(meanAnomalyCurrentStateInRadians);
-
-        //     //Store the vector containing the Direct 6 Orbital Elements in state history
-        //     dustStateHistoryKeplerElementsFinalFormat[currentEpoch] 
-        //         = dustCurrentStateFormatted;
-
-
-
-        // }
-
-
-        //     ///////////////////////////////////////////////////////////////////////////////////
-
-        //     // Write state histories to files.
-
-        //     // Convert case number and stepsize values as strings.
-        //     std::ostringstream fileNameBase;
-        //     fileNameBase << "_case" << caseNumber + 1 << "_" << fixedStepSize << "s.dat";
-
-        //     // Write dust state history in Cartesian elements to file.
-        //     writeDataMapToTextFile( dustStateHistory, 
-        //                             "dustStateHistory" + fileNameBase.str( ),
-        //                             outputDirectory,
-        //                             "",
-        //                             numeric_limits< double >::digits10,
-        //                             numeric_limits< double >::digits10,
-        //                             "," );
-
-        //     // Write dust state history in Keplerian elements to file.
-        //     writeDataMapToTextFile( dustStateHistoryKeplerElements, 
-        //                             "dustStateHistoryKeplerElements" + fileNameBase.str( ),
-        //                             outputDirectory,
-        //                             "",
-        //                             numeric_limits< double >::digits10,
-        //                             numeric_limits< double >::digits10,
-        //                             ",");
+            // Write dust state history in Keplerian elements to file.
+            writeDataMapToTextFile( dustStateHistoryKeplerElements, 
+                                    "dustStateHistoryKeplerElements" + fileNameBase.str( ),
+                                    outputDirectory,
+                                    "",
+                                    numeric_limits< double >::digits10,
+                                    numeric_limits< double >::digits10,
+                                    ",");
 
 
-        //     // write DataMap to text file in Keplerian Elements
-        //     // writeDataMapToTextFile( dustStateHistoryCOEKeplerCoord, 
-        //     //                         "dustStateHistoryCOE" + definingInformation + ".dat",
-        //     //                         outputDirectory,
-        //     //                         "",
-        //     //                         numeric_limits< double >::digits10,
-        //     //                         numeric_limits< double >::digits10,
-        //     //                         ",");
+            // Write dust state history in Keplerian elements for benchmark to file.
+            writeDataMapToTextFile( dustStateHistoryKeplerElements, 
+                                    "dustStateHistoryKeplerElementsBenchmark" 
+                                    + fileNameBase.str( ),
+                                    outputDirectory,
+                                    "",
+                                    numeric_limits< double >::digits10,
+                                    numeric_limits< double >::digits10,
+                                    ",");
 
-        //     /////////////////////////////////////////////////////////////////////// 
-
+            /////////////////////////////////////////////////////////////////////// 
 
         } // for-loop over step sizes
     } // for-loop over cases
