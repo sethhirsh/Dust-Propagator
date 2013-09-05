@@ -1,16 +1,9 @@
-<<<<<<< HEAD
-/*    Copyright (c) 2010-2013, S. Hirsh
- *    Copyright (c) 2010-2013, Delft University of Technology
- *    All rights reserved.
- *    See COPYING for license details.
-=======
 /*    
  *    Copyright (c) 2013, S. Hirsh
  *    Copyright (c) 2013, K. Kumar
  *    Copyright (c) 2010-2013, Delft University of Technology
  *    All rights reserved.
  *    See COPYING or http://bit.ly/1cFRf75 for license details.
->>>>>>> d5e24de37b4a12e841bf0329e63eb9395001c611
  *
  *    Changelog
  *      YYMMDD    Author            Comment
